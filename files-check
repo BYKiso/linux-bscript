@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# function to copy files
+copy_files() {
+  source=$1
+  destination=$2
+
+  # check if the source folder exists
+  if [ ! -d $source ]; then
+    echo "ERROR: Source folder $source does not exist."
+    return
+  fi
+
+  # check if destination folder exists
+  if [ -d $destination ]; then
+	read -p "Destination folder $destination already exists. Do you want to overwrite it? (y/n): " overwrite < /dev/tty
+
+    if [ "$overwrite" != "y" ] && [ "$overwrite" != "Y" ]; then
+      echo "Copy task cancelled."
+      return
+    fi
+    rm -rf $destination
+  fi
+
+  # copy files from source to destination
+  cp -r $source $destination
+  echo "Files copied successfully from $source to $destination."
+}
+
+# check if the command line parameter is provided
+if [ $# -eq 1 ]; then
+  filename=$1
+  # check if the file exists
+  if [ ! -f $filename ]; then
+    echo "File $filename not found."
+    exit 1
+  fi
+
+  # read file line by line and copy files
+  while read line; do
+    source=$(echo $line | awk '{print $1}')
+    destination=$(echo $line | awk '{print $2}')
+    copy_files $source $destination
+  done < $filename
+
+# If no command line parameter is provided, prompt the user for source and destination folders
+elif [ $# -eq 0 ]; then
+  read -p "Enter source folder path: " source
+  read -p "Enter destination folder path: " destination
+  copy_files $source $destination
+
+# If too many command line parameters are provided
+else
+  echo "Too many arguments entered."
+fi
